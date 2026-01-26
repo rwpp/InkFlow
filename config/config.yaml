@@ -1,0 +1,57 @@
+postgres:
+  dsn: "host=postgres  user=root password=root dbname=ink_flow port=5432"
+redis:
+  addr: redis:6379
+  password: ""
+
+#es:
+#  addr: 127.0.0.1:9200
+#  sniff: false
+
+meilisearch:
+  addr: http://meilisearch:7700
+  master_key: inkflow
+
+email:
+  smtp:
+    username: 1684086096@qq.com
+    password: apdolmdtwvxwbdfi
+    port: 25
+    host: smtp.qq.com
+    from_name: InkFlow
+
+llm:
+  gemini:
+    key:
+      - AIzaSyBBiY-zpPMYGuk92jIFiLpvktQWVV1obLk
+
+otel:
+  grpc:
+    endpoint: jeager:4317
+    insecure: true
+
+kafka:
+  addrs:
+    - kafka:9092
+
+file:
+  cloudinary:
+    key: 193734117343925
+    secret: S5w513hKgOdbhUe4218bRJu4_N0
+    cloud_name: dglosxr6y
+
+temporal:
+  addr: temporal:7233
+  namespace: inkflow
+  domain: default
+
+gorse:
+  addr: http://gorse:8088
+  #  default is empty
+  api_key: inkflow
+
+log:
+  level: info
+  filename: /home/andras/worklogs/app.log
+  maxsize: 100
+  maxage: 7
