@@ -2,14 +2,17 @@
 
 ## 概述
 
-本项目提供了两个 GitHub Actions workflow 用于编译代码：
+本项目提供了两个 GitHub Actions workflow：
 
-1. **build.yml** - 多平台构建（支持 Linux/Windows/macOS，AMD64/ARM64）
-2. **build-simple.yml** - 简化版（仅 Linux AMD64，推荐使用）
+1. **build-simple.yml** - Linux AMD64 构建（直接运行二进制文件）⭐
+2. **build-docker.yml** - Docker 镜像构建（使用 Docker 部署）
+
+## 选择哪个？
+
+- **只用 Linux 服务器，直接运行** → 使用 `build-simple.yml`
+- **使用 Docker 部署** → 使用 `build-docker.yml`（需要配置认证，见下方说明）
 
 ## 使用方法
-
-### 方法一：使用简化版（推荐）
 
 1. 推送代码到 GitHub
 2. 进入 GitHub 仓库的 **Actions** 标签页
@@ -18,28 +21,14 @@
 5. 等待构建完成
 6. 在构建结果页面下载 **release-linux-amd64** 产物
 
-### 方法二：使用多平台构建
-
-1. 推送代码到 GitHub
-2. 进入 **Actions** 标签页
-3. 选择 **Build** workflow
-4. 等待所有平台构建完成
-5. 下载对应平台的构建产物
-
 ## 构建产物说明
 
-### 简化版构建产物
+构建完成后会生成以下文件：
 
 - `ink-flow` - Go 后端可执行文件（Linux AMD64）
 - `ink-flow-backend-linux-amd64.tar.gz` - 后端压缩包
 - `ink-flow-frontend.tar.gz` - 前端静态文件压缩包
-- `ink-flow-full.tar.gz` - 完整打包（后端+前端）
-
-### 多平台构建产物
-
-- `backend-{os}-{arch}` - 各平台的后端可执行文件
-- `frontend-dist` - 前端静态文件
-- `release-linux-amd64` - Linux AMD64 完整发布包
+- `ink-flow-full.tar.gz` - 完整打包（后端+前端，推荐下载这个）
 
 ## 部署到服务器
 
@@ -87,6 +76,32 @@ cp config/config.temp.yaml config/config.yaml
 3. 后续构建会使用缓存，速度更快
 4. 确保 `config/config.yaml` 配置文件存在且正确配置
 
+## Docker 镜像认证问题
+
+如果使用 `build-docker.yml` 构建的镜像，在服务器上拉取时遇到认证错误：
+
+```
+Error response from daemon: denied: permission_denied
+```
+
+### 解决方法
+
+1. **创建 GitHub Personal Access Token**
+   - 访问：https://github.com/settings/tokens
+   - 创建新 Token，勾选 `read:packages` 权限
+
+2. **在服务器上登录**
+   ```bash
+   echo "your_pat_token" | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+   ```
+
+3. **拉取镜像**
+   ```bash
+   docker pull ghcr.io/your-username/InkFlow-backend:latest
+   ```
+
+详细说明请查看：[docs/docker-auth.md](../docs/docker-auth.md)
+
 ## 故障排查
 
 如果构建失败：
@@ -95,4 +110,6 @@ cp config/config.temp.yaml config/config.yaml
 2. 检查 Node.js 版本（需要 Node 20+）
 3. 查看 Actions 日志了解具体错误
 4. 确保所有依赖文件都已提交到仓库
+5. Docker 构建需要仓库有 `packages: write` 权限（通常自动配置）
+5. Docker 构建需要仓库有 `packages: write` 权限（通常自动配置）
 
