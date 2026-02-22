@@ -11,6 +11,38 @@ import (
 	"text/template"
 )
 
+// extractJSON 从模型输出中提取第一个完整 JSON 对象，兼容星火等返回前后缀或 markdown 包裹的情况。
+func extractJSON(s string) string {
+	s = strings.TrimSpace(s)
+	// 去掉 markdown 代码块
+	if strings.HasPrefix(s, "```") {
+		if i := strings.Index(s, "\n"); i != -1 {
+			s = s[i+1:]
+		}
+		s = strings.TrimPrefix(s, "json")
+		s = strings.TrimSpace(s)
+		s = strings.TrimSuffix(s, "```")
+		s = strings.TrimSpace(s)
+	}
+	start := strings.Index(s, "{")
+	if start == -1 {
+		return s
+	}
+	depth := 0
+	for i := start; i < len(s); i++ {
+		switch s[i] {
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				return s[start : i+1]
+			}
+		}
+	}
+	return s[start:]
+}
+
 const reviewPrompt = `
 你是一个内容审核助手，专注于社交平台的内容合规性判断。
 请根据以下标准判断文本是否符合社区规范（例如：不得包含暴力、色情、歧视、诈骗、明显广告推销[可以接受商品推荐]等内容）。
@@ -63,7 +95,8 @@ func (s *Service) ReviewInk(ctx context.Context, ink domain.Ink) (domain.ReviewR
 	}
 
 	var result domain.ReviewResult
-	err = json.Unmarshal([]byte(s.trimMarkdown(resp.Content)), &result)
+	jsonStr := extractJSON(resp.Content)
+	err = json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
 		return domain.ReviewResult{}, err
 	}
