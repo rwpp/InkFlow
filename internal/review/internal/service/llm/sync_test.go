@@ -3,13 +3,12 @@ package llm
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/KNICEX/InkFlow/internal/ai"
 	"github.com/KNICEX/InkFlow/internal/review/internal/domain"
 	"github.com/KNICEX/InkFlow/internal/review/internal/service"
-	"github.com/google/generative-ai-go/genai"
 	"github.com/spf13/viper"
-	"google.golang.org/api/option"
 )
 
 // 星火 API 测试用配置（与 config 中 llm.openai_go 一致，无 key 时可跳过星火用例）
@@ -18,19 +17,6 @@ const (
 	sparkBaseURL = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
 	sparkModelID = "xop3qwen1b7"
 )
-
-func TestService_ReviewInk(t *testing.T) {
-	// 1）用 Gemini 组一个后端
-	cli, err := genai.NewClient(context.Background(), option.WithAPIKey("AIzaSyDsK-uD5Y-mW17slUROmaA4kFpohM4V96Y"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	geminiClients := []*genai.Client{cli}
-	svcs := ai.InitLLMServices(geminiClients)
-	llmSvc := ai.InitLLMService(svcs)
-	svc := NewLLMService(llmSvc)
-	runReviewInkCases(t, svc)
-}
 
 func TestService_ReviewInk_Spark(t *testing.T) {
 	// 2）仅用星火（openai_go）组一个后端，走同一套审核用例
@@ -88,7 +74,10 @@ func runReviewInkCases(t *testing.T, svc service.Service) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := svc.ReviewInk(context.Background(), tc.ink)
+			// 真实请求外部 API，必须带超时，否则网络不可达或服务慢时会一直阻塞
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			resp, err := svc.ReviewInk(ctx, tc.ink)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("ReviewInk() error = %v, wantErr %v", err, tc.wantErr)
 				return
