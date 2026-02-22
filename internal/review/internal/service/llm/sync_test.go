@@ -2,22 +2,52 @@ package llm
 
 import (
 	"context"
+	"testing"
+
 	"github.com/KNICEX/InkFlow/internal/ai"
 	"github.com/KNICEX/InkFlow/internal/review/internal/domain"
+	"github.com/KNICEX/InkFlow/internal/review/internal/service"
 	"github.com/google/generative-ai-go/genai"
+	"github.com/spf13/viper"
 	"google.golang.org/api/option"
-	"testing"
+)
+
+// 星火 API 测试用配置（与 config 中 llm.openai_go 一致，无 key 时可跳过星火用例）
+const (
+	sparkAPIKey  = "48b67ea1a4441212253f51e2c904ef5b:YmMyNDU2MTM2M2IwZGY2NmE3ZDg4ZWFm"
+	sparkBaseURL = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
+	sparkModelID = "xop3qwen1b7"
 )
 
 func TestService_ReviewInk(t *testing.T) {
+	// 1）用 Gemini 组一个后端
 	cli, err := genai.NewClient(context.Background(), option.WithAPIKey("AIzaSyDsK-uD5Y-mW17slUROmaA4kFpohM4V96Y"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	llmSvc := ai.InitLLMService(cli)
-
+	geminiClients := []*genai.Client{cli}
+	svcs := ai.InitLLMServices(geminiClients)
+	llmSvc := ai.InitLLMService(svcs)
 	svc := NewLLMService(llmSvc)
+	runReviewInkCases(t, svc)
+}
 
+func TestService_ReviewInk_Spark(t *testing.T) {
+	// 2）仅用星火（openai_go）组一个后端，走同一套审核用例
+	viper.Set("llm.openai_go.api_key", sparkAPIKey)
+	viper.Set("llm.openai_go.base_url", sparkBaseURL)
+	viper.Set("llm.openai_go.model_id", sparkModelID)
+	svcs := ai.InitLLMServices(nil)
+	if len(svcs) == 0 {
+		t.Skip("未配置星火 llm.openai_go，跳过")
+	}
+	llmSvc := ai.InitLLMService(svcs)
+	svc := NewLLMService(llmSvc)
+	runReviewInkCases(t, svc)
+}
+
+func runReviewInkCases(t *testing.T, svc service.Service) {
+	t.Helper()
 	testCases := []struct {
 		name     string
 		ink      domain.Ink

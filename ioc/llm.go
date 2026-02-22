@@ -13,8 +13,9 @@ func InitGeminiClient() []*genai.Client {
 		Key []string `mapstructure:"key"`
 	}
 	var cfg Config
-	if err := viper.UnmarshalKey("llm.gemini", &cfg); err != nil {
-		panic(err)
+	_ = viper.UnmarshalKey("llm.gemini", &cfg)
+	if len(cfg.Key) == 0 {
+		return nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
