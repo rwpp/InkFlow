@@ -40,7 +40,7 @@ import { notification } from '@/utils/notification.ts'
 const registerTokenStore = useRegisterTokenStore()
 const codeLoginFormRef = useTemplateRef<InstanceType<typeof ElForm>>('codeLoginFormRef')
 const emailFormItemRef = useTemplateRef<InstanceType<typeof ElFormItem>>('emailFormItemRef')
-const emit = defineEmits(['reportSize', 'reportTitle', 'hasAccount', 'nextStep'])
+const emit = defineEmits(['reportSize', 'reportTitle', 'hasAccount', 'nextStep', 'loginSuccess'])
 onMounted(() => {
   emit('reportSize', '24rem', '24rem')
   emit('reportTitle', '注册 1/2')
@@ -113,7 +113,8 @@ const handleCodeLogin = async () => {
       })
       loading.value = false
       if (!token) {
-        // 登录成功
+        // 已有账号时，后端直接完成登录，关闭弹窗
+        emit('loginSuccess')
         return
       }
       // 保存临时token，进入注册流程
