@@ -48,14 +48,9 @@ func (c *NotificationConsumer) Start() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		err = cg.Consume(context.Background(),
-			[]string{topicFollow, topicCommentReply, topicCommentLike, topicInkLike},
-			saramax.NewRawHandler(c.l, c))
-		if err != nil {
-			c.l.Warn("notification consumer quit...", logx.Error(err))
-		}
-	}()
+	go saramax.ConsumeWithRetry(context.Background(), cg,
+		[]string{topicFollow, topicCommentReply, topicCommentLike, topicInkLike},
+		saramax.NewRawHandler(c.l, c), c.l)
 	return nil
 }
 

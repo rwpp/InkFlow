@@ -44,12 +44,7 @@ func (c *InkViewConsumer) Start() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		er := cg.Consume(context.Background(),
-			[]string{topicInkView}, saramax.NewBatchHandler(c.l, c))
-		if er != nil {
-			c.l.Warn("consume quited", logx.Error(er))
-		}
-	}()
+	go saramax.ConsumeWithRetry(context.Background(), cg,
+		[]string{topicInkView}, saramax.NewBatchHandler(c.l, c), c.l)
 	return nil
 }

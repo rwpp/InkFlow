@@ -70,12 +70,8 @@ func (c *ReviewConsumer) Start() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		err = group.Consume(context.Background(), []string{inkReviewTopic}, saramax.NewHandler(c, c.l))
-		if err != nil {
-			c.l.Warn("ink review consumer quit...", logx.Error(err))
-		}
-	}()
+	go saramax.ConsumeWithRetry(context.Background(), group,
+		[]string{inkReviewTopic}, saramax.NewHandler(c, c.l), c.l)
 	return nil
 }
 
