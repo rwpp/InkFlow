@@ -76,31 +76,43 @@ cp config/config.temp.yaml config/config.yaml
 3. 后续构建会使用缓存，速度更快
 4. 确保 `config/config.yaml` 配置文件存在且正确配置
 
-## Docker 镜像认证问题
+## Docker 部署（使用 GitHub Actions 构建的镜像）
 
-如果使用 `build-docker.yml` 构建的镜像，在服务器上拉取时遇到认证错误：
+### 1. 认证 ghcr.io
 
+创建 GitHub Personal Access Token：
+- 访问：https://github.com/settings/tokens
+- 创建新 Token，勾选 `read:packages` 权限
+
+在服务器上登录：
+```bash
+echo "your_pat_token" | docker login ghcr.io -u YOUR_USERNAME --password-stdin
 ```
-Error response from daemon: denied: permission_denied
+
+### 2. 部署命令
+
+项目提供了 `docker-compose.prod.yaml` 覆盖文件，用于将 backend/frontend 从本地构建切换为拉取远程镜像。
+
+```bash
+# 拉取最新镜像 + 强制重建容器
+docker compose -f docker-compose.yaml -f docker-compose.prod.yaml pull backend frontend
+docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --no-build --force-recreate
 ```
 
-### 解决方法
+可以设置别名简化操作：
+```bash
+alias dc-prod='docker compose -f docker-compose.yaml -f docker-compose.prod.yaml'
+# 之后只需：
+dc-prod pull backend frontend
+dc-prod up -d --no-build --force-recreate
+```
 
-1. **创建 GitHub Personal Access Token**
-   - 访问：https://github.com/settings/tokens
-   - 创建新 Token，勾选 `read:packages` 权限
+### 3. 验证部署
 
-2. **在服务器上登录**
-   ```bash
-   echo "your_pat_token" | docker login ghcr.io -u YOUR_USERNAME --password-stdin
-   ```
-
-3. **拉取镜像**
-   ```bash
-   docker pull ghcr.io/your-username/InkFlow-backend:latest
-   ```
-
-详细说明请查看：[docs/docker-auth.md](../docs/docker-auth.md)
+```bash
+# 确认容器是刚创建的
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.CreatedAt}}"
+```
 
 ## 故障排查
 
@@ -110,6 +122,5 @@ Error response from daemon: denied: permission_denied
 2. 检查 Node.js 版本（需要 Node 20+）
 3. 查看 Actions 日志了解具体错误
 4. 确保所有依赖文件都已提交到仓库
-5. Docker 构建需要仓库有 `packages: write` 权限（通常自动配置）
 5. Docker 构建需要仓库有 `packages: write` 权限（通常自动配置）
 

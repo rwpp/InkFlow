@@ -5,11 +5,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/KNICEX/InkFlow/internal/code/internal/repo"
-	"github.com/KNICEX/InkFlow/internal/email"
 	"html/template"
 	"math/rand"
 	"time"
+
+	"github.com/KNICEX/InkFlow/internal/code/internal/repo"
+	"github.com/KNICEX/InkFlow/internal/email"
 )
 
 var (
@@ -87,7 +88,7 @@ func WithTemplate(title string, temp *template.Template) CodeServiceOption {
 
 func (c *CachedEmailCodeService) generateCode() string {
 	num := rand.Intn(1000000)
-	return fmt.Sprintf("%6d", num)
+	return fmt.Sprintf("%06d", num)
 }
 
 func (c *CachedEmailCodeService) Send(ctx context.Context, biz, recipient string) error {

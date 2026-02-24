@@ -1,0 +1,8 @@
+services:
+  backend:
+    image: your/inkflow-backend:latest
+    volumes:
+      - your:/app/log
+
+  frontend:
+    image: your/inkflow-frontend:latest
