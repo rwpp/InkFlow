@@ -71,6 +71,7 @@ func InitApp() *App {
 
 		comment.InitCommentService,
 
+		ai.InitLLMServices,
 		ai.InitLLMService,
 		review.InitService,
 		review.InitAsyncService,

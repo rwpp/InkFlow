@@ -2,22 +2,40 @@ package llm
 
 import (
 	"context"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/KNICEX/InkFlow/internal/ai"
 	"github.com/KNICEX/InkFlow/internal/review/internal/domain"
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
-	"testing"
+	"github.com/KNICEX/InkFlow/internal/review/internal/service"
+	"github.com/spf13/viper"
 )
 
-func TestService_ReviewInk(t *testing.T) {
-	cli, err := genai.NewClient(context.Background(), option.WithAPIKey("AIzaSyDsK-uD5Y-mW17slUROmaA4kFpohM4V96Y"))
-	if err != nil {
-		t.Fatal(err)
+var (
+	sparkAPIKey  = os.Getenv("SPARK_API_KEY")
+	sparkBaseURL = os.Getenv("SPARK_BASE_URL")
+	sparkModelID = os.Getenv("SPARK_MODEL_ID")
+)
+
+func TestService_ReviewInk_Spark(t *testing.T) {
+	if sparkAPIKey == "" || sparkBaseURL == "" || sparkModelID == "" {
+		t.Skip("未设置 SPARK_API_KEY / SPARK_BASE_URL / SPARK_MODEL_ID 环境变量，跳过星火用例")
 	}
-	llmSvc := ai.InitLLMService(cli)
-
+	viper.Set("llm.openai_go.api_key", sparkAPIKey)
+	viper.Set("llm.openai_go.base_url", sparkBaseURL)
+	viper.Set("llm.openai_go.model_id", sparkModelID)
+	svcs := ai.InitLLMServices(nil)
+	if len(svcs) == 0 {
+		t.Skip("未配置星火 llm.openai_go，跳过")
+	}
+	llmSvc := ai.InitLLMService(svcs)
 	svc := NewLLMService(llmSvc)
+	runReviewInkCases(t, svc)
+}
 
+func runReviewInkCases(t *testing.T, svc service.Service) {
+	t.Helper()
 	testCases := []struct {
 		name     string
 		ink      domain.Ink
@@ -58,7 +76,10 @@ func TestService_ReviewInk(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := svc.ReviewInk(context.Background(), tc.ink)
+			// 真实请求外部 API，必须带超时，否则网络不可达或服务慢时会一直阻塞
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			resp, err := svc.ReviewInk(ctx, tc.ink)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("ReviewInk() error = %v, wantErr %v", err, tc.wantErr)
 				return

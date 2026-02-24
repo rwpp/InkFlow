@@ -58,18 +58,18 @@ func (f *FailoverLLMService) AskOnce(ctx context.Context, question string) (doma
 }
 
 func (f *FailoverLLMService) BeginChat(ctx context.Context) (LLMSession, error) {
-	i := int(f.idx.Load())
+	n := len(f.svcs)
+	i := int(f.idx.Load()) % n
 	f.idx.Add(1)
 	var session LLMSession
 	var err error
 
-	for range len(f.svcs) {
-		// 最多遍历一遍所有svc
+	for range n {
 		session, err = f.svcs[i].BeginChat(ctx)
 		if err == nil {
 			return session, nil
 		}
-		i++
+		i = (i + 1) % n
 	}
 	return session, err
 }

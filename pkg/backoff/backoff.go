@@ -47,7 +47,7 @@ func Wrap(fn func() error, policy Policy) func() error {
 				policy.OnRetry(i, err)
 			}
 			time.Sleep(min(
-				time.Duration(int64(policy.BackoffCoefficient*float64(i)*float64(policy.InitialInterval))),
+				time.Duration(int64(policy.BackoffCoefficient*float64(i+1)*float64(policy.InitialInterval))),
 				policy.MaxRetryInterval),
 			)
 		}

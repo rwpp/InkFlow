@@ -34,6 +34,7 @@
         @report-size="handleReportSize"
         @report-title="handleReportTitle"
         @next-step="changeType(LoginType.EmailRegister)"
+        @login-success="handleLoginSuccess"
         @has-account="changeType(LoginType.Email)"
       ></EmailCode>
       <EmailRegister
@@ -118,6 +119,10 @@ const handleClose = () => {
 }
 
 const handleRegisterSuccess = () => {
+  model.value = false
+}
+
+const handleLoginSuccess = () => {
   model.value = false
 }
 </script>

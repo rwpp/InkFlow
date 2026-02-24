@@ -1,12 +1,14 @@
 package ioc
 
 import (
+	"fmt"
 	"github.com/KNICEX/InkFlow/pkg/logx"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 //	func InitLogger() logx.Logger {
@@ -30,15 +32,26 @@ func InitLogger() logx.Logger {
 	if err := viper.UnmarshalKey("log", &config); err != nil {
 		panic(err)
 	}
-	writers := []io.Writer{
-		os.Stdout,
-		&lumberjack.Logger{
+
+	// 确保日志文件所在目录存在
+	if config.Filename != "" {
+		logDir := filepath.Dir(config.Filename)
+		if logDir != "." && logDir != "" {
+			if err := os.MkdirAll(logDir, 0755); err != nil {
+				panic(fmt.Errorf("failed to create log directory: %w", err))
+			}
+		}
+	}
+
+	writers := []io.Writer{os.Stdout}
+	if config.Filename != "" {
+		writers = append(writers, &lumberjack.Logger{
 			Filename:  config.Filename,
 			MaxSize:   config.MaxSize,
 			MaxAge:    config.MaxAge,
 			LocalTime: true,
 			Compress:  false,
-		},
+		})
 	}
 	logrus.SetOutput(io.MultiWriter(writers...))
 

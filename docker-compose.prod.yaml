@@ -1,0 +1,9 @@
+# 部署时请将 your-registry 替换为你的镜像仓库地址
+services:
+  backend:
+    image: your-registry/inkflow-backend:latest
+    volumes:
+      - ./log:/app/log
+
+  frontend:
+    image: your-registry/inkflow-frontend:latest
