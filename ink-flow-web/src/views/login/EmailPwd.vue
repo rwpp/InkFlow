@@ -30,6 +30,9 @@ import FormInput from '@/components/form/FormInput.vue'
 import { ElForm, type FormRules } from 'element-plus'
 import { loginEmailPwd } from '@/service/user.ts'
 import { notifySuccessLogin } from '@/utils/notification.ts'
+import { useUserStore } from '@/stores/user.ts'
+
+const userStore = useUserStore()
 
 const pwdLoginInfo = ref({
   email: '',
@@ -57,17 +60,15 @@ const pwdRules = reactive<FormRules>({
 })
 
 const handlePwdLogin = () => {
-  console.log('tes')
   pwdLoginFormRef?.value?.validate(async (valid: boolean) => {
     if (valid) {
       await loginEmailPwd({
         email: pwdLoginInfo.value.email,
         password: pwdLoginInfo.value.password,
       })
+      await userStore.refreshActiveUserInfo()
       notifySuccessLogin()
       window.location.reload()
-    } else {
-      // return
     }
   })
 }

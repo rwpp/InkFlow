@@ -36,6 +36,7 @@ func (r *reviewFailRepo) Create(ctx context.Context, evt domain.FailReview, er e
 	}
 
 	record := dao.ReviewFail{
+		Type:  string(evt.Type),
 		Event: string(eventJson),
 		Error: er.Error(),
 	}

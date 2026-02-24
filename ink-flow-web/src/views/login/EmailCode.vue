@@ -34,9 +34,11 @@ import { ElForm, ElFormItem, type FormRules } from 'element-plus'
 import FormInput from '@/components/form/FormInput.vue'
 import { loginEmailCode, sendLoginCode } from '@/service/user.ts'
 import { computed, onMounted, reactive, ref, useTemplateRef } from 'vue'
-import { useRegisterTokenStore } from '@/stores/user.ts'
+import { useRegisterTokenStore, useUserStore } from '@/stores/user.ts'
 import clsx from 'clsx'
 import { notification } from '@/utils/notification.ts'
+
+const userStore = useUserStore()
 const registerTokenStore = useRegisterTokenStore()
 const codeLoginFormRef = useTemplateRef<InstanceType<typeof ElForm>>('codeLoginFormRef')
 const emailFormItemRef = useTemplateRef<InstanceType<typeof ElFormItem>>('emailFormItemRef')
@@ -113,7 +115,7 @@ const handleCodeLogin = async () => {
       })
       loading.value = false
       if (!token) {
-        // 已有账号时，后端直接完成登录，关闭弹窗
+        await userStore.refreshActiveUserInfo()
         emit('loginSuccess')
         return
       }
