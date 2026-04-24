@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -11,15 +12,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// 星火 API 测试用配置（与 config 中 llm.openai_go 一致，无 key 时可跳过星火用例）
-const (
-	sparkAPIKey  = "48b67ea1a4441212253f51e2c904ef5b:YmMyNDU2MTM2M2IwZGY2NmE3ZDg4ZWFm"
-	sparkBaseURL = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
-	sparkModelID = "xop3qwen1b7"
+var (
+	sparkAPIKey  = os.Getenv("SPARK_API_KEY")
+	sparkBaseURL = os.Getenv("SPARK_BASE_URL")
+	sparkModelID = os.Getenv("SPARK_MODEL_ID")
 )
 
 func TestService_ReviewInk_Spark(t *testing.T) {
-	// 2）仅用星火（openai_go）组一个后端，走同一套审核用例
+	if sparkAPIKey == "" || sparkBaseURL == "" || sparkModelID == "" {
+		t.Skip("未设置 SPARK_API_KEY / SPARK_BASE_URL / SPARK_MODEL_ID 环境变量，跳过星火用例")
+	}
 	viper.Set("llm.openai_go.api_key", sparkAPIKey)
 	viper.Set("llm.openai_go.base_url", sparkBaseURL)
 	viper.Set("llm.openai_go.model_id", sparkModelID)

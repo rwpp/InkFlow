@@ -43,15 +43,15 @@ func InitLogger() logx.Logger {
 		}
 	}
 
-	writers := []io.Writer{
-		os.Stdout,
-		&lumberjack.Logger{
+	writers := []io.Writer{os.Stdout}
+	if config.Filename != "" {
+		writers = append(writers, &lumberjack.Logger{
 			Filename:  config.Filename,
 			MaxSize:   config.MaxSize,
 			MaxAge:    config.MaxAge,
 			LocalTime: true,
 			Compress:  false,
-		},
+		})
 	}
 	logrus.SetOutput(io.MultiWriter(writers...))
 

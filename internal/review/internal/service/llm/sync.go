@@ -14,7 +14,6 @@ import (
 // extractJSON 从模型输出中提取第一个完整 JSON 对象，兼容星火等返回前后缀或 markdown 包裹的情况。
 func extractJSON(s string) string {
 	s = strings.TrimSpace(s)
-	// 去掉 markdown 代码块
 	if strings.HasPrefix(s, "```") {
 		if i := strings.Index(s, "\n"); i != -1 {
 			s = s[i+1:]
@@ -29,8 +28,26 @@ func extractJSON(s string) string {
 		return s
 	}
 	depth := 0
+	inString := false
+	escaped := false
 	for i := start; i < len(s); i++ {
-		switch s[i] {
+		ch := s[i]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if ch == '\\' && inString {
+			escaped = true
+			continue
+		}
+		if ch == '"' {
+			inString = !inString
+			continue
+		}
+		if inString {
+			continue
+		}
+		switch ch {
 		case '{':
 			depth++
 		case '}':
@@ -49,12 +66,13 @@ const reviewPrompt = `
 你的任务是判断是否通过审核，如果不通过,给出简洁明了的理由(reason)。
 如果通过,你还需要给内容打一个0-100的分数(reviewScore)，表示内容的充实度, 
 并且为文章内容打上标签(reviewTags),要求从大分类到小分类尽量全面, 10个左右, 例如：科技->AI->ChatGPT。
-请按照json格式输入,如下：
+请严格按照以下json格式输出：
 {  
 	"passed": true | false,  
 	"reason": "如不通过，请说明原因；如通过，为空",
 	"reviewScore": 0-100,
 	"reviewTags": ["tag1", "tag2"...]
+}
 输出必须是合法 JSON，不要添加额外解释，不要有多余文本。
 
 内容：{{.content}}
@@ -73,7 +91,7 @@ func NewLLMService(llm ai.LLMService) service.Service {
 }
 
 func (s *Service) trimJsonResp(content string) string {
-	content = strings.Trim("\n", content)
+	content = strings.Trim(content, "\n")
 	lines := strings.Split(content, "\n")
 	if len(lines) > 3 {
 		lines = lines[1 : len(lines)-1]

@@ -34,7 +34,8 @@ func (svc *RecommendService) FindSimilarInk(ctx context.Context, inkId int64, of
 	// TODO 这个sdk没有实现offset
 	scores, err := svc.cli.GetNeighbors(ctx, strconv.FormatInt(inkId, 10), limit)
 	if err != nil {
-		return nil, err
+		svc.l.WithCtx(ctx).Warn("GetNeighbors failed, return empty", logx.Error(err))
+		return []int64{}, nil
 	}
 	return lo.Map(scores, func(item client.Score, index int) int64 {
 		id, err := strconv.ParseInt(item.Id, 10, 64)

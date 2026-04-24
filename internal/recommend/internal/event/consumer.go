@@ -36,12 +36,9 @@ func (s *SyncConsumer) Start() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		err = cg.Consume(context.Background(), []string{topicUserCreate, topicInkLike, topicInkCancelLike}, saramax.NewRawHandler(s.l, s))
-		if err != nil {
-			s.l.Warn("recommend sync consumer quit...", logx.Error(err))
-		}
-	}()
+	go saramax.ConsumeWithRetry(context.Background(), cg,
+		[]string{topicUserCreate, topicInkLike, topicInkCancelLike},
+		saramax.NewRawHandler(s.l, s), s.l)
 	return nil
 }
 
