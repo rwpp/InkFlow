@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/KNICEX/InkFlow/ioc"
 	"github.com/fsnotify/fsnotify"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.temporal.io/sdk/worker"
-	"net/http"
 )
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 		}()
 	}
 
-	app.Server.Run(":8080")
+	app.Server.Run(":8888")
 
 }
 
