@@ -30,7 +30,7 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=builder /app/ink-flow .
 
 # Expose ports (Application and Prometheus)
-EXPOSE 8080 8081
+EXPOSE 8888 8081
 
 # Command to run the application
 CMD ["./ink-flow"]

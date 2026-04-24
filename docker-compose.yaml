@@ -161,7 +161,7 @@ services:
     container_name: ink-flow-backend
     restart: on-failure
     ports:
-      - "8080:8080" # App Server
+      - "8888:8888" # App Server
       - "8081:8081" # Prometheus Metrics
     volumes:
       - ./config:/app/config
