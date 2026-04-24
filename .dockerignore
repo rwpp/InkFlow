@@ -1,0 +1,8 @@
+ink-flow-web
+plugin-system
+.git
+.github
+.cursor
+docs
+deps
+*.md

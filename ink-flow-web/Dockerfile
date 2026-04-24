@@ -1,16 +1,16 @@
 # Build stage
-FROM node:lts-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+# Enable corepack and activate pnpm 9.x (matches lockfileVersion 9.0)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
