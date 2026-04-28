@@ -102,8 +102,6 @@ const handlePublish = async () => {
   <DashboardContent title="Edit">
     <div class="flex w-full flex-1 grow-1 overflow-hidden">
       <div class="w-40 h-full hidden 2xl:inline">
-        <span> 自动目录区 </span>
-        <span>待实现</span>
       </div>
       <MilkdownWrapper
         :read-only="false"
