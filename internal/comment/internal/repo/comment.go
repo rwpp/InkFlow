@@ -2,13 +2,14 @@ package repo
 
 import (
 	"context"
+	"strings"
+
 	"github.com/KNICEX/InkFlow/internal/comment/internal/repo/cache"
 	"github.com/KNICEX/InkFlow/internal/comment/internal/repo/dao"
 	"github.com/KNICEX/InkFlow/pkg/logx"
 	"github.com/KNICEX/InkFlow/pkg/stringx"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
 	"github.com/KNICEX/InkFlow/internal/comment/internal/domain"
 )
@@ -17,6 +18,7 @@ import (
 type CommentRepo interface {
 	CreateComment(ctx context.Context, comment domain.Comment) (int64, error)
 	DelComment(ctx context.Context, id int64) error
+	DeleteByBiz(ctx context.Context, biz string, bizId int64) error
 	LikeComment(ctx context.Context, uid, cid int64) error
 	CancelLike(ctx context.Context, uid, cid int64) error
 
@@ -65,6 +67,10 @@ func (repo *CachedCommentRepo) CreateComment(ctx context.Context, comment domain
 func (repo *CachedCommentRepo) DelComment(ctx context.Context, id int64) error {
 	// TODO 这里需要减少对应biz的评论数缓存
 	return repo.dao.Delete(ctx, id)
+}
+
+func (repo *CachedCommentRepo) DeleteByBiz(ctx context.Context, biz string, bizId int64) error {
+	return repo.dao.DeleteByBiz(ctx, biz, bizId)
 }
 
 func (repo *CachedCommentRepo) LikeComment(ctx context.Context, uid, cid int64) error {

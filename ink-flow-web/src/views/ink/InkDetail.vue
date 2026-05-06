@@ -7,6 +7,8 @@ import {
   cancelFavorite,
   cancelLike,
   detail,
+  deleteDraft,
+  deleteLive,
   draftDetail,
   favorite,
   like,
@@ -30,6 +32,7 @@ import MoreOperation from '@/components/button/MoreOperation.vue'
 import BackTop from '@/components/BackTop.vue'
 import { useUserStore } from '@/stores/user.ts'
 import { similarInks } from '@/service/recommend.ts'
+import { confirm } from '@/utils/message.ts'
 
 const milkdownRef = useTemplateRef<InstanceType<typeof MilkdownWrapper>>('milkdownRef')
 const contentRef = useTemplateRef<HTMLElement>('contentRef')
@@ -143,6 +146,26 @@ const handleCancelFavorite = async () => {
   ink.value.interactive.favorited = !ink.value.interactive.favorited
 }
 
+const handleDelete = () => {
+  confirm({
+    title: 'warning',
+    message: '删除后无法恢复，确认删除吗😰?',
+    confirmed: async () => {
+      if (ink.value.status === InkStatus.UnPublished) {
+        await deleteDraft(ink.value.id)
+      } else {
+        await deleteLive(ink.value.id)
+      }
+      notification({
+        type: 'success',
+        title: 'Success',
+        message: '内容删除成功',
+      })
+      router.back()
+    },
+  })
+}
+
 const ops = computed(() => {
   const baseOps = [
     {
@@ -161,9 +184,7 @@ const ops = computed(() => {
     })
     baseOps.push({
       name: '删除',
-      action: () => {
-        console.log('删除')
-      },
+      action: handleDelete,
     })
   }
   return baseOps

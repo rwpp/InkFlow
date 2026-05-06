@@ -2,6 +2,10 @@ package web
 
 import (
 	"errors"
+	"strconv"
+	"time"
+
+	"github.com/KNICEX/InkFlow/internal/comment"
 	"github.com/KNICEX/InkFlow/internal/ink"
 	"github.com/KNICEX/InkFlow/internal/interactive"
 	"github.com/KNICEX/InkFlow/internal/workflow/inkpub"
@@ -13,8 +17,6 @@ import (
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/client"
 	"golang.org/x/sync/errgroup"
-	"strconv"
-	"time"
 )
 
 const (
@@ -28,6 +30,7 @@ type InkHandler struct {
 	inkRankService ink.RankingService
 	workflowCli    client.Client
 	interactiveSvc interactive.Service
+	commentSvc     comment.Service
 	auth           middleware.Authentication
 	userAggregate  *UserAggregate
 	inkAggregate   *InkAggregate
@@ -37,12 +40,14 @@ type InkHandler struct {
 
 func NewInkHandler(svc ink.Service, userAggregate *UserAggregate, intrAggregate *InteractiveAggregate,
 	intrSvc interactive.Service,
+	commentSvc comment.Service,
 	auth middleware.Authentication,
 	workflowCli client.Client, l logx.Logger) *InkHandler {
 	return &InkHandler{
 		svc:            svc,
 		workflowCli:    workflowCli,
 		interactiveSvc: intrSvc,
+		commentSvc:     commentSvc,
 		auth:           auth,
 		userAggregate:  userAggregate,
 		inkAggregate:   NewInkAggregate(svc, userAggregate, intrAggregate),
@@ -300,6 +305,10 @@ func (h *InkHandler) DeleteDraft(ctx *gin.Context) (ginx.Result, error) {
 	if err != nil {
 		return ginx.InternalError(), err
 	}
+	if err = h.commentSvc.DeleteByBiz(ctx, bizInk, id); err != nil {
+		h.l.WithCtx(ctx).Error("delete comments by biz error after delete draft",
+			logx.Int64("inkId", id), logx.Error(err))
+	}
 	return ginx.Success(), nil
 }
 
@@ -317,6 +326,10 @@ func (h *InkHandler) DeleteLive(ctx *gin.Context) (ginx.Result, error) {
 	})
 	if err != nil {
 		return ginx.InternalError(), err
+	}
+	if err = h.commentSvc.DeleteByBiz(ctx, bizInk, id); err != nil {
+		h.l.WithCtx(ctx).Error("delete comments by biz error after delete live",
+			logx.Int64("inkId", id), logx.Error(err))
 	}
 	return ginx.Success(), nil
 }

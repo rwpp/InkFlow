@@ -27,14 +27,11 @@ import (
 
 // Injectors from wire.go:
 
-func InitBff(userSvc user.Service, codeSvc code.Service, inkService ink.Service, inkRankService ink.RankingService,
-	followService relation.FollowService, interactiveSvc interactive.Service, commentSvc comment.Service,
-	notificationSvc notification.Service, recommendSvc recommend.Service, feedSvc feed.Service, searchSvc search.Service,
-	workflowCli client.Client, jwtHandler jwt.Handler, auth middleware.Authentication, log logx.Logger) []ginx.Handler {
+func InitBff(userSvc user.Service, codeSvc code.Service, inkService ink.Service, inkRankService ink.RankingService, followService relation.FollowService, interactiveSvc interactive.Service, commentSvc comment.Service, notificationSvc notification.Service, recommendSvc recommend.Service, feedSvc feed.Service, searchSvc search.Service, workflowCli client.Client, jwtHandler jwt.Handler, auth middleware.Authentication, log logx.Logger) []ginx.Handler {
 	userHandler := web.NewUserHandler(userSvc, inkService, commentSvc, interactiveSvc, codeSvc, followService, jwtHandler, auth, log)
 	userAggregate := web.NewUserAggregate(userSvc, followService)
 	interactiveAggregate := web.NewInteractiveAggregate(interactiveSvc, commentSvc)
-	inkHandler := web.NewInkHandler(inkService, userAggregate, interactiveAggregate, interactiveSvc, auth, workflowCli, log)
+	inkHandler := web.NewInkHandler(inkService, userAggregate, interactiveAggregate, interactiveSvc, commentSvc, auth, workflowCli, log)
 	cloudinary := initCloudinary()
 	fileHandler := web.NewFileHandler(cloudinary, auth, log)
 	commentHandler := web.NewCommentHandler(commentSvc, followService, userSvc, auth, log)

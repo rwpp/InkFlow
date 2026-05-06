@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/KNICEX/InkFlow/internal/comment/internal/domain"
 	"github.com/KNICEX/InkFlow/internal/comment/internal/event"
 	"github.com/KNICEX/InkFlow/internal/comment/internal/repo"
@@ -10,7 +12,6 @@ import (
 	"github.com/KNICEX/InkFlow/pkg/logx"
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
-	"time"
 )
 
 var (
@@ -24,6 +25,7 @@ const (
 type CommentService interface {
 	Create(ctx context.Context, comment domain.Comment) (int64, error)
 	Delete(ctx context.Context, id int64, uid int64) error
+	DeleteByBiz(ctx context.Context, biz string, bizId int64) error
 	Like(ctx context.Context, uid, cid int64) error
 	CancelLike(ctx context.Context, uid, cid int64) error
 
@@ -168,6 +170,10 @@ func (svc *commentService) Delete(ctx context.Context, id int64, uid int64) erro
 		}
 	}()
 	return svc.repo.DelComment(ctx, id)
+}
+
+func (svc *commentService) DeleteByBiz(ctx context.Context, biz string, bizId int64) error {
+	return svc.repo.DeleteByBiz(ctx, biz, bizId)
 }
 
 func (svc *commentService) Like(ctx context.Context, uid, cid int64) error {
